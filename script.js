@@ -1,4 +1,35 @@
 // --- EOC Chapters (Simplified from PDF for brevity) ---
+// Inside loadClassOverviewData
+            // ...
+            const eocSubjects = {
+                "Reading": "classWeakEocReading",
+                "Writing & Language": "classWeakEocWriting",
+                "Math": "classWeakEocMath"
+            };
+
+            Object.entries(eocSubjects).forEach(([subjectName, containerId]) => {
+                const container = document.getElementById(containerId);
+                if(container) {
+                    container.innerHTML = '';
+                    const subjectEocChapters = eocChaptersFull[subjectName.toLowerCase().split(' ')[0]]; // e.g., "reading"
+                    if (subjectEocChapters) {
+                        const sortedEocs = subjectEocChapters.map(name => ({name, avgScore: classAverages.eocChapters[name] || 0}))
+                            .sort((a,b) => a.avgScore - b.avgScore)
+                            .slice(0, 3); 
+                        sortedEocs.forEach(eoc => {
+                            const studentsBelow70 = students.filter(s => (Object.values(s.eocScores).flat().find(se => se.name === eoc.name)? parseInt(Object.values(s.eocScores).flat().find(se => se.name === eoc.name).latestScore) : 100) < 70).length;
+                            container.innerHTML += `<div class="p-1 border-b border-gray-200 text-xs"><span class="font-medium">${eoc.name}</span>: Avg ${eoc.avgScore}% <span class="text-red-500">(${studentsBelow70}/${students.length} &lt;70%)</span></div>`;
+                        });
+                        if(sortedEocs.length === 0) container.innerHTML = `<p class="text-xs text-gray-400">No specific weak EOC Quizzes identified for ${subjectName}.</p>`;
+                    } else {
+                         container.innerHTML = `<p class="text-xs text-gray-400">EOC chapter data not found for ${subjectName}.</p>`;
+                    }
+                } else {
+                    console.error(`Container not found for weak EOCs: ${containerId}`);
+                }
+            });
+            // ...
+
 const eocChaptersFull = { 
     reading: ["Vocabulary in Context", "Making the Leap", "The Big Picture", "Literal Comprehension", "Reading for Function", "Supporting & Undermining", "Graphs & Charts", "Paired Passages"],
     writing: ["Transitions", "Specific Focus", "Sentences & Fragments", "Joining & Separating Sentences", "Non-Essential & Essential Clauses", "Verbs Agreements and Tense", "Pronouns", "Modification", "Parallel Structure"],
@@ -241,7 +272,42 @@ function loadClassOverviewData() {
         classSkillPerformanceChartInstance = new Chart(classSkillPerfCanvas.getContext('2d'), { type: 'radar', data: { labels: skillKeysForChart.map(k=>k.split('_')[1].charAt(0).toUpperCase() + k.split('_')[1].slice(1) || k.split('_')[0]), datasets: [{ label: 'Class Avg Accuracy (%)', data: skillKeysForChart.map(key => classAverages.cbSkills[key] || 0), fill: true, backgroundColor: CHART_PRIMARY_BG_RADAR, borderColor: CHART_PRIMARY_COLOR, pointBackgroundColor: CHART_PRIMARY_COLOR }] }, options: { ...chartOptions, scales: { r: { beginAtZero: true, max: 100, suggestedMin: 40, pointLabels: { font: { size: 10 } } } } } }); 
     } else { console.error("classSkillPerformanceChart canvas not found"); }
     
-    ['Reading', 'Writing', 'Math'].forEach(subject => { const containerId = `classWeakEoc${subject.replace(' & Language','')}`; const container = document.getElementById(containerId.toLowerCase()); if(container) { container.innerHTML = ''; const subjectEocs = eocChaptersFull[subject.toLowerCase().split(' ')[0]]; const sortedEocs = subjectEocs.map(name => ({name, avgScore: classAverages.eocChapters[name] || 0})).sort((a,b) => a.avgScore - b.avgScore).slice(0, 3); sortedEocs.forEach(eoc => { const studentsBelow70 = students.filter(s => (Object.values(s.eocScores).flat().find(se => se.name === eoc.name)? parseInt(Object.values(s.eocScores).flat().find(se => se.name === eoc.name).latestScore) : 100) < 70).length; container.innerHTML += `<div class="p-1 border-b border-gray-200 text-xs"><span class="font-medium">${eoc.name}</span>: Avg ${eoc.avgScore}% <span class="text-red-500">(${studentsBelow70}/${students.length} &lt;70%)</span></div>`; }); if(sortedEocs.length === 0) container.innerHTML = `<p class="text-xs text-gray-400">No specific weak EOC Quizzes identified for ${subject}.</p>`; } else { console.error(`Container not found for weak EOCs: ${containerId.toLowerCase()}`);} });
+    ['Reading', 'Writing & Language', 'Math'].forEach(subject => {
+                let subjectKey = subject;
+                if (subject === 'Writing & Language') {
+                    subjectKey = 'Writing'; // Or whatever the ID expects, e.g., Writing_WL
+                }
+                // Let's re-check the HTML IDs for these containers.
+                // HTML has: classWeakEocReading, classWeakEocWriting, classWeakEocMath
+                // So, for "Writing & Language", the key should likely just be "Writing".
+
+                let idSuffix = subject;
+                if (subject === 'Writing & Language') {
+                    idSuffix = 'Writing';
+                } else if (subject === 'Reading') {
+                    idSuffix = 'Reading';
+                } else if (subject === 'Math') {
+                    idSuffix = 'Math';
+                }
+                // The original replace was intended to make "Writing & Language" into "Writing" for the ID.
+                // A simpler replace might be just removing non-alphanumeric for the ID part.
+                // Original logic was: `classWeakEoc${subject.replace(' & Language', '')}`.toLowerCase()
+                // This would result in classweaoceading, classweaocwriting, classweaocmath.
+                // HTML IDs are: classWeakEocReading, classWeakEocWriting, classWeakEocMath.
+                // The .toLowerCase() was the issue if the IDs in HTML are camelCased.
+
+                let idForContainer = '';
+                if (subject === 'Reading') {
+                    idForContainer = 'classWeakEocReading';
+                } else if (subject === 'Writing & Language') {
+                    idForContainer = 'classWeakEocWriting';
+                } else if (subject === 'Math') {
+                    idForContainer = 'classWeakEocMath';
+                }
+                
+                const container = document.getElementById(idForContainer); // Use the exact ID
+                // ... rest of the population logic ...
+            });
     
     const skillStrengthsUl = document.getElementById('classSkillStrengths'); const skillWeaknessesUl = document.getElementById('classSkillWeaknesses'); 
     if (skillStrengthsUl && skillWeaknessesUl) {
