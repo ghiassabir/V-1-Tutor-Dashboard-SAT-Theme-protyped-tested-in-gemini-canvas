@@ -1,35 +1,6 @@
-// --- EOC Chapters (Simplified from PDF for brevity) ---
-// Inside loadClassOverviewData
-            // ...
-            const eocSubjects = {
-                "Reading": "classWeakEocReading",
-                "Writing & Language": "classWeakEocWriting",
-                "Math": "classWeakEocMath"
-            };
+// --- Tutor Dashboard Script (GitHub Version - Cleaned and Verified) ---
 
-            Object.entries(eocSubjects).forEach(([subjectName, containerId]) => {
-                const container = document.getElementById(containerId);
-                if(container) {
-                    container.innerHTML = '';
-                    const subjectEocChapters = eocChaptersFull[subjectName.toLowerCase().split(' ')[0]]; // e.g., "reading"
-                    if (subjectEocChapters) {
-                        const sortedEocs = subjectEocChapters.map(name => ({name, avgScore: classAverages.eocChapters[name] || 0}))
-                            .sort((a,b) => a.avgScore - b.avgScore)
-                            .slice(0, 3); 
-                        sortedEocs.forEach(eoc => {
-                            const studentsBelow70 = students.filter(s => (Object.values(s.eocScores).flat().find(se => se.name === eoc.name)? parseInt(Object.values(s.eocScores).flat().find(se => se.name === eoc.name).latestScore) : 100) < 70).length;
-                            container.innerHTML += `<div class="p-1 border-b border-gray-200 text-xs"><span class="font-medium">${eoc.name}</span>: Avg ${eoc.avgScore}% <span class="text-red-500">(${studentsBelow70}/${students.length} &lt;70%)</span></div>`;
-                        });
-                        if(sortedEocs.length === 0) container.innerHTML = `<p class="text-xs text-gray-400">No specific weak EOC Quizzes identified for ${subjectName}.</p>`;
-                    } else {
-                         container.innerHTML = `<p class="text-xs text-gray-400">EOC chapter data not found for ${subjectName}.</p>`;
-                    }
-                } else {
-                    console.error(`Container not found for weak EOCs: ${containerId}`);
-                }
-            });
-            // ...
-
+// --- EOC Chapters Data ---
 const eocChaptersFull = { 
     reading: ["Vocabulary in Context", "Making the Leap", "The Big Picture", "Literal Comprehension", "Reading for Function", "Supporting & Undermining", "Graphs & Charts", "Paired Passages"],
     writing: ["Transitions", "Specific Focus", "Sentences & Fragments", "Joining & Separating Sentences", "Non-Essential & Essential Clauses", "Verbs Agreements and Tense", "Pronouns", "Modification", "Parallel Structure"],
@@ -37,6 +8,7 @@ const eocChaptersFull = {
 };
 const allEocChaptersList = [].concat(...Object.values(eocChaptersFull));
 
+// --- CB Skills Data (Generic for Structure) ---
 const genericCbSkills = {
     reading: [ { name: "Info & Ideas: Central Ideas", key: "reading_central_ideas" }, { name: "Info & Ideas: Evidence", key: "reading_evidence"}, { name: "Craft & Structure: Vocab", key: "reading_vocab" }, { name: "Craft & Structure: Purpose", key: "reading_purpose"} ],
     writing: [ { name: "Expression: Rhetoric", key: "writing_rhetoric" }, { name: "Expression: Transitions", key: "writing_transitions"}, { name: "Conventions: Boundaries", key: "writing_boundaries" }, { name: "Conventions: Form/Sense", key: "writing_form_sense"} ],
@@ -44,6 +16,7 @@ const genericCbSkills = {
 };
 const allCbSkillsList = [].concat(...Object.values(genericCbSkills).map(cat => cat.map(s => s.key)));
 
+// --- Dummy Student Data Generation ---
 const students = [];
 const firstNames = ["Alice", "Bob", "Charlie", "Diana", "Edward", "Fiona", "George", "Hannah", "Ian", "Julia"];
 const lastNames = ["Smith", "Jones", "Williams", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson"];
@@ -71,7 +44,7 @@ for (let i = 0; i < 10; i++) {
     };
     
     const testNames = ["Diagnostic Test", "Official Practice Test 1", "Official Practice Test 2", "Official Practice Test 3"];
-    let currentScore = student.activityMetrics.previousTotalScore - 50; 
+    let currentScoreForHistory = student.activityMetrics.previousTotalScore - 50; 
     testNames.forEach((name, idx) => {
         let rw, math, total;
         if (idx === testNames.length -1) { 
@@ -79,14 +52,14 @@ for (let i = 0; i < 10; i++) {
             rw = Math.floor(total * (0.45 + Math.random() * 0.1)); 
             math = total - rw;
         } else {
-            currentScore += Math.floor(Math.random()*70 - 10); 
-            total = Math.max(900, Math.min(1550, currentScore)); 
+            currentScoreForHistory += Math.floor(Math.random()*70 - 10); 
+            total = Math.max(900, Math.min(1550, currentScoreForHistory)); 
             rw = Math.floor(total * (0.45 + Math.random() * 0.1));
             math = total - rw;
         }
         student.cbPracticeTests.push({ name, date: `2024-0${idx+3}-10`, rw, math, total });
     });
-     for(let j=4; j<=7; j++) student.cbPracticeTests.push({ name: `Official Practice Test ${j}`, date: "Not Attempted", rw: "-", math: "-", total: "-" });
+    for(let j=4; j<=7; j++) student.cbPracticeTests.push({ name: `Official Practice Test ${j}`, date: "Not Attempted", rw: "-", math: "-", total: "-" });
 
     Object.keys(eocChaptersFull).forEach(subject => {
         eocChaptersFull[subject].forEach(chapterName => {
@@ -99,7 +72,7 @@ for (let i = 0; i < 10; i++) {
              student.khanData[subject].push({ name: `Khan Academy: ${skill.name} Practice`, score: `${Math.floor(Math.random()*5+5)}/10 (${Math.floor(Math.random()*50+50)}%)`, pointsPossible: "10", classAvg: `${Math.floor(Math.random()*20+60)}%`, date: `2024-05-${Math.floor(Math.random()*20+1).toString().padStart(2,'0')}` });
         });
     });
-     Object.keys(genericCbSkills).forEach(subject => {
+    Object.keys(genericCbSkills).forEach(subject => {
         genericCbSkills[subject].forEach(skillInfo => {
             student.cbSkills[subject].push({ name: skillInfo.name, key: skillInfo.key, score: Math.floor(Math.random() * 50 + 50), classAvg: Math.floor(Math.random() * 20 + 65) });
         });
@@ -107,6 +80,7 @@ for (let i = 0; i < 10; i++) {
     students.push(student);
 }
 
+// --- Calculate Class Averages ---
 const classAverages = {
     totalScaledScore: students.reduce((sum, s) => sum + s.activityMetrics.latestTotalScore, 0) / students.length,
     rwScore: students.reduce((sum, s) => sum + (s.cbPracticeTests.find(t=>t.total === s.activityMetrics.latestTotalScore)?.rw || 0), 0) / students.length,
@@ -121,26 +95,48 @@ const classAverages = {
 allCbSkillsList.forEach(key => { classAverages.cbSkills[key] = Math.round(students.reduce((s,std)=>s+ (std.cbSkills[Object.keys(genericCbSkills).find(subj=>genericCbSkills[subj].find(sk=>sk.key===key))]?.find(sk=>sk.key===key)?.score || 0),0)/students.length) || 0; });
 allEocChaptersList.forEach(name => { classAverages.eocChapters[name] = Math.round(students.reduce((s,std)=>s+ (Object.values(std.eocScores).flat().find(e=>e.name===name)? parseInt(Object.values(std.eocScores).flat().find(e=>e.name===name).latestScore) :0),0)/students.length) || 0; });
 
+// --- Chart Instances (Global Scope) ---
 let classScoreDistributionChartInstance, classSkillPerformanceChartInstance;
 let studentScoreTrendChartInstance, studentOverallSkillChartInstance;
 let modalDonutChartInstance, modalLineChartInstance;
 
-// --- DOM Element References ---
-const tutorTabs = document.querySelectorAll('.main-nav-button');
-const tutorTabContents = document.querySelectorAll('.tutor-tab-content');
-const studentSelector = document.getElementById('studentSelector');
-const replicatedStudentDashboardDiv = document.getElementById('replicatedStudentDashboard');
-const selectedStudentNameHeader = document.getElementById('selectedStudentNameHeader');
-const studentSelectionPrompt = document.getElementById('studentSelectionPrompt');
-const modal = document.getElementById('detailModal');
-const modalQuestionDetailsContainer = document.getElementById('modalQuestionDetails');
+// --- DOM Element References (Global Scope for convenience) ---
+let tutorTabs, tutorTabContents, studentSelector, replicatedStudentDashboardDiv, selectedStudentNameHeader, studentSelectionPrompt, modal, modalQuestionDetailsContainer;
 
-// --- Event Listeners & Initialization ---
+// --- Chart Theming Colors ---
+const CHART_PRIMARY_COLOR = '#2a5266'; 
+const CHART_SECONDARY_COLOR = '#757575'; 
+const CHART_PRIMARY_BG_BAR = 'rgba(42, 82, 102, 0.8)'; 
+const CHART_PRIMARY_BG_RADAR = 'rgba(42, 82, 102, 0.3)';
+
+// --- Main Initialization ---
 document.addEventListener('DOMContentLoaded', function () {
-    console.log("Tutor Dashboard DOMContentLoaded");
+    console.log("Tutor Dashboard DOMContentLoaded: Initializing script...");
+
+    // Assign DOM elements after they are loaded
+    tutorTabs = document.querySelectorAll('.main-nav-button');
+    tutorTabContents = document.querySelectorAll('.tutor-tab-content');
+    studentSelector = document.getElementById('studentSelector');
+    replicatedStudentDashboardDiv = document.getElementById('replicatedStudentDashboard');
+    selectedStudentNameHeader = document.getElementById('selectedStudentNameHeader');
+    studentSelectionPrompt = document.getElementById('studentSelectionPrompt');
+    modal = document.getElementById('detailModal');
+    modalQuestionDetailsContainer = document.getElementById('modalQuestionDetails');
+
     document.getElementById('currentYear').textContent = new Date().getFullYear();
-    students.forEach(student => { const opt = document.createElement('option'); opt.value = student.id; opt.textContent = student.name; studentSelector.appendChild(opt); });
-    studentSelector.value = ""; // No student selected initially
+    
+    if (studentSelector) {
+        students.forEach(student => { 
+            const opt = document.createElement('option'); 
+            opt.value = student.id; 
+            opt.textContent = student.name; 
+            studentSelector.appendChild(opt); 
+        });
+        studentSelector.value = ""; // No student selected initially
+    } else {
+        console.error("Student selector not found!");
+    }
+
 
     tutorTabs.forEach(tab => {
         tab.addEventListener('click', () => {
@@ -152,70 +148,80 @@ document.addEventListener('DOMContentLoaded', function () {
             const targetEl = document.getElementById(targetContentId);
             if(targetEl) {
                 targetEl.classList.remove('hidden');
-                console.log("Showing content:", targetContentId);
+                console.log("Showing content for main tab:", targetContentId);
             } else {
-                console.error("Target content not found for tab:", targetContentId);
+                console.error("Target content not found for main tab:", targetContentId);
             }
 
             if (targetContentId === 'class-overview-content') loadClassOverviewData();
             else if (targetContentId === 'student-performance-tiers-content') loadStudentPerformanceTiers();
             else if (targetContentId === 'student-deep-dive-content') {
-                if (studentSelector.value) loadStudentDashboard(studentSelector.value);
-                else { 
-                    replicatedStudentDashboardDiv.classList.add('hidden'); 
-                    studentSelectionPrompt.classList.remove('hidden'); 
-                    selectedStudentNameHeader.textContent = "";
+                if (studentSelector && studentSelector.value) {
+                    loadStudentDashboard(studentSelector.value);
+                } else { 
+                    if(replicatedStudentDashboardDiv) replicatedStudentDashboardDiv.classList.add('hidden'); 
+                    if(studentSelectionPrompt) studentSelectionPrompt.classList.remove('hidden'); 
+                    if(selectedStudentNameHeader) selectedStudentNameHeader.textContent = "";
                 }
             }
         });
     });
     
-    studentSelector.addEventListener('change', function() {
-        if (this.value) { 
-            console.log("Student selected:", this.value);
-            loadStudentDashboard(this.value); 
-            studentSelectionPrompt.classList.add('hidden'); 
-        } else { 
-            replicatedStudentDashboardDiv.classList.add('hidden'); 
-            studentSelectionPrompt.classList.remove('hidden'); 
-            selectedStudentNameHeader.textContent = ""; 
-        }
-    });
+    if (studentSelector) {
+        studentSelector.addEventListener('change', function() {
+            if (this.value) { 
+                console.log("Student selected via dropdown:", this.value);
+                loadStudentDashboard(this.value); 
+                if(studentSelectionPrompt) studentSelectionPrompt.classList.add('hidden'); 
+            } else { 
+                if(replicatedStudentDashboardDiv) replicatedStudentDashboardDiv.classList.add('hidden'); 
+                if(studentSelectionPrompt) studentSelectionPrompt.classList.remove('hidden'); 
+                if(selectedStudentNameHeader) selectedStudentNameHeader.textContent = ""; 
+            }
+        });
+    }
 
-    if (tutorTabs.length > 0) tutorTabs[0].click(); // Activate first tab
+    if (tutorTabs.length > 0) {
+        console.log("Activating first tutor tab by default.");
+        tutorTabs[0].click(); 
+    } else {
+        console.error("No tutor tabs found to activate.");
+    }
 
     document.querySelectorAll('.student-main-tab-button').forEach(tab => {
         tab.addEventListener('click', () => {
+            console.log("Student main tab clicked:", tab.getAttribute('data-student-main-tab'));
             document.querySelectorAll('.student-main-tab-button').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.student-main-tab-content').forEach(content => content.classList.add('hidden'));
             tab.classList.add('active'); 
             const targetContentId = 'student-' + tab.getAttribute('data-student-main-tab') + '-content';
-            document.getElementById(targetContentId)?.classList.remove('hidden');
+            const targetEl = document.getElementById(targetContentId);
+            if(targetEl) targetEl.classList.remove('hidden');
+            
             if (tab.getAttribute('data-student-main-tab') === 'overview') {
-                const student = students.find(s => s.id === studentSelector.value);
+                const student = students.find(s => s.id === (studentSelector ? studentSelector.value : null));
                 if (student) initializeStudentOverviewCharts(student);
             }
             const firstSubTab = document.querySelector(`#${targetContentId} .sub-tab-button`);
             if (firstSubTab) firstSubTab.click();
         });
     });
+
     document.querySelectorAll('#replicatedStudentDashboard .sub-tab-button').forEach(subTab => {
         subTab.addEventListener('click', (e) => {
+            console.log("Student sub-tab clicked:", subTab.getAttribute('data-student-sub-tab'));
             const parentMainTabContent = subTab.closest('.student-main-tab-content');
-            parentMainTabContent.querySelectorAll('.sub-tab-button').forEach(st => st.classList.remove('active'));
-            parentMainTabContent.querySelectorAll('.student-sub-tab-content-panel').forEach(panel => panel.classList.add('hidden'));
+            if (parentMainTabContent) {
+                parentMainTabContent.querySelectorAll('.sub-tab-button').forEach(st => st.classList.remove('active'));
+                parentMainTabContent.querySelectorAll('.student-sub-tab-content-panel').forEach(panel => panel.classList.add('hidden'));
+            }
             subTab.classList.add('active');
             const targetSubContentId = 'student-' + subTab.getAttribute('data-student-sub-tab') + '-content';
             document.getElementById(targetSubContentId)?.classList.remove('hidden');
         });
     });
+    console.log("Event listeners set up.");
 });
-
-// --- Chart Theming Colors ---
-const CHART_PRIMARY_COLOR = '#2a5266'; // SAT Hub Teal
-const CHART_SECONDARY_COLOR = '#757575'; // Grey for comparison lines/bars
-const CHART_PRIMARY_BG_BAR = 'rgba(42, 82, 102, 0.8)'; // Darker Teal Translucent for bars
-const CHART_PRIMARY_BG_RADAR = 'rgba(42, 82, 102, 0.3)'; // Lighter Teal Translucent for radar fill
 
 function initializeStudentOverviewCharts(student) { 
     console.log("Initializing student overview charts for:", student.name);
@@ -234,13 +240,12 @@ function initializeStudentOverviewCharts(student) {
         const studentSkillLabels = Object.values(student.cbSkills).flat().map(s => s.name.split(": ")[1] || s.name.split(" ")[0]); 
         const studentSkillScores = Object.values(student.cbSkills).flat().map(s => s.score); 
         const studentSkillClassAvgs = Object.values(student.cbSkills).flat().map(s => classAverages.cbSkills[s.key] || s.classAvg); 
-        studentOverallSkillChartInstance = new Chart(studentOverallSkillCanvas.getContext('2d'), { 
-            type: 'bar', data: { labels: studentSkillLabels.slice(0,8), datasets: [ { label: 'Your Accuracy', data: studentSkillScores.slice(0,8), backgroundColor: CHART_PRIMARY_BG_BAR}, { label: 'Class Average', data: studentSkillClassAvgs.slice(0,8), backgroundColor: CHART_SECONDARY_COLOR + 'AA' } ] }, options: { ...chartOptions, scales: { y: { beginAtZero: true, max: 100 }}} });
+        studentOverallSkillChartInstance = new Chart(studentOverallSkillCanvas.getContext('2d'), { type: 'bar', data: { labels: studentSkillLabels.slice(0,8), datasets: [ { label: 'Your Accuracy', data: studentSkillScores.slice(0,8), backgroundColor: CHART_PRIMARY_BG_BAR}, { label: 'Class Average', data: studentSkillClassAvgs.slice(0,8), backgroundColor: CHART_SECONDARY_COLOR + 'AA' } ] }, options: { ...chartOptions, scales: { y: { beginAtZero: true, max: 100 }}} });
     } else { console.error("studentOverallSkillChart canvas not found"); }
 }
 
 function loadClassOverviewData() { 
-    console.log("Loading Class Overview Data");
+    console.log("Loading Class Overview Data...");
     const chartOptions = { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: true, position: 'bottom' }}};
     const kpiContainer = document.getElementById('classKpiSection'); 
     if (kpiContainer) {
@@ -269,55 +274,53 @@ function loadClassOverviewData() {
     if (classSkillPerfCanvas) {
         if (classSkillPerformanceChartInstance) classSkillPerformanceChartInstance.destroy(); 
         const skillKeysForChart = ['math_algebra', 'math_advanced', 'math_problem_solving', 'math_geometry', 'reading_central_ideas', 'reading_vocab', 'writing_rhetoric', 'writing_boundaries']; 
-        classSkillPerformanceChartInstance = new Chart(classSkillPerfCanvas.getContext('2d'), { type: 'radar', data: { labels: skillKeysForChart.map(k=>k.split('_')[1].charAt(0).toUpperCase() + k.split('_')[1].slice(1) || k.split('_')[0]), datasets: [{ label: 'Class Avg Accuracy (%)', data: skillKeysForChart.map(key => classAverages.cbSkills[key] || 0), fill: true, backgroundColor: CHART_PRIMARY_BG_RADAR, borderColor: CHART_PRIMARY_COLOR, pointBackgroundColor: CHART_PRIMARY_COLOR }] }, options: { ...chartOptions, scales: { r: { beginAtZero: true, max: 100, suggestedMin: 40, pointLabels: { font: { size: 10 } } } } } }); 
+        const radarChartLabels = skillKeysForChart.map(k => { const parts = k.split('_'); return parts.length > 1 ? parts[1].charAt(0).toUpperCase() + parts[1].slice(1) : parts[0].charAt(0).toUpperCase() + parts[0].slice(1); });
+        classSkillPerformanceChartInstance = new Chart(classSkillPerfCanvas.getContext('2d'), { type: 'radar', data: { labels: radarChartLabels, datasets: [{ label: 'Class Avg Accuracy (%)', data: skillKeysForChart.map(key => classAverages.cbSkills[key] || 0), fill: true, backgroundColor: CHART_PRIMARY_BG_RADAR, borderColor: CHART_PRIMARY_COLOR, pointBackgroundColor: CHART_PRIMARY_COLOR }] }, options: { ...chartOptions, scales: { r: { beginAtZero: true, max: 100, suggestedMin: 40, pointLabels: { font: { size: 10 } } } } } }); 
     } else { console.error("classSkillPerformanceChart canvas not found"); }
     
-    ['Reading', 'Writing & Language', 'Math'].forEach(subject => {
-                let subjectKey = subject;
-                if (subject === 'Writing & Language') {
-                    subjectKey = 'Writing'; // Or whatever the ID expects, e.g., Writing_WL
-                }
-                // Let's re-check the HTML IDs for these containers.
-                // HTML has: classWeakEocReading, classWeakEocWriting, classWeakEocMath
-                // So, for "Writing & Language", the key should likely just be "Writing".
-
-                let idSuffix = subject;
-                if (subject === 'Writing & Language') {
-                    idSuffix = 'Writing';
-                } else if (subject === 'Reading') {
-                    idSuffix = 'Reading';
-                } else if (subject === 'Math') {
-                    idSuffix = 'Math';
-                }
-                // The original replace was intended to make "Writing & Language" into "Writing" for the ID.
-                // A simpler replace might be just removing non-alphanumeric for the ID part.
-                // Original logic was: `classWeakEoc${subject.replace(' & Language', '')}`.toLowerCase()
-                // This would result in classweaoceading, classweaocwriting, classweaocmath.
-                // HTML IDs are: classWeakEocReading, classWeakEocWriting, classWeakEocMath.
-                // The .toLowerCase() was the issue if the IDs in HTML are camelCased.
-
-                let idForContainer = '';
-                if (subject === 'Reading') {
-                    idForContainer = 'classWeakEocReading';
-                } else if (subject === 'Writing & Language') {
-                    idForContainer = 'classWeakEocWriting';
-                } else if (subject === 'Math') {
-                    idForContainer = 'classWeakEocMath';
-                }
-                
-                const container = document.getElementById(idForContainer); // Use the exact ID
-                // ... rest of the population logic ...
-            });
+    ['Reading', 'Writing & Language', 'Math'].forEach(subject => { 
+        let subjectKeyForId = subject;
+        if (subject === 'Writing & Language') subjectKeyForId = 'Writing'; // Use "Writing" for ID consistency
+        const containerId = `classWeakEoc${subjectKeyForId}`; 
+        const container = document.getElementById(containerId); 
+        if(container) { 
+            container.innerHTML = ''; 
+            const subjectEocChapterNames = eocChaptersFull[subject.toLowerCase().split(' ')[0]]; 
+            if (subjectEocChapterNames) {
+                const sortedEocs = subjectEocChapterNames.map(name => ({name, avgScore: classAverages.eocChapters[name] || 0}))
+                    .sort((a,b) => a.avgScore - b.avgScore)
+                    .slice(0, 3); 
+                sortedEocs.forEach(eoc => { 
+                    const studentsBelow70 = students.filter(s => (Object.values(s.eocScores).flat().find(se => se.name === eoc.name)? parseInt(Object.values(s.eocScores).flat().find(se => se.name === eoc.name).latestScore) : 100) < 70).length; 
+                    container.innerHTML += `<div class="p-1 border-b border-gray-200 text-xs"><span class="font-medium">${eoc.name}</span>: Avg ${eoc.avgScore}% <span class="text-red-500">(${studentsBelow70}/${students.length} &lt;70%)</span></div>`; 
+                }); 
+                if(sortedEocs.length === 0) container.innerHTML = `<p class="text-xs text-gray-400">No specific weak EOC Quizzes identified for ${subject}.</p>`; 
+            } else {
+                 container.innerHTML = `<p class="text-xs text-gray-400">Chapter definition missing for ${subject}.</p>`;
+            }
+        } else { 
+            console.error(`Container not found for weak EOCs: ${containerId}`);
+        } 
+    });
     
-    const skillStrengthsUl = document.getElementById('classSkillStrengths'); const skillWeaknessesUl = document.getElementById('classSkillWeaknesses'); 
+    const skillStrengthsUl = document.getElementById('classSkillStrengths'); 
+    const skillWeaknessesUl = document.getElementById('classSkillWeaknesses'); 
     if (skillStrengthsUl && skillWeaknessesUl) {
-        skillStrengthsUl.innerHTML = ''; skillWeaknessesUl.innerHTML = ''; const allSkillsWithNames = []; Object.values(genericCbSkills).flat().forEach(skillInfo => { allSkillsWithNames.push({name: skillInfo.name, key: skillInfo.key, avgScore: classAverages.cbSkills[skillInfo.key] || 0}); }); allSkillsWithNames.sort((a,b) => b.avgScore - a.avgScore);  allSkillsWithNames.slice(0,3).forEach(s => skillStrengthsUl.innerHTML += `<li>${s.name} (${s.avgScore}%)</li>`); allSkillsWithNames.sort((a,b) => a.avgScore - b.avgScore);  allSkillsWithNames.slice(0,3).forEach(s => skillWeaknessesUl.innerHTML += `<li>${s.name} (${s.avgScore}%)</li>`);
+        skillStrengthsUl.innerHTML = ''; skillWeaknessesUl.innerHTML = ''; 
+        const allSkillsWithNames = []; 
+        Object.values(genericCbSkills).flat().forEach(skillInfo => { allSkillsWithNames.push({name: skillInfo.name, key: skillInfo.key, avgScore: classAverages.cbSkills[skillInfo.key] || 0}); }); 
+        allSkillsWithNames.sort((a,b) => b.avgScore - a.avgScore);  
+        allSkillsWithNames.slice(0,3).forEach(s => skillStrengthsUl.innerHTML += `<li>${s.name} (${s.avgScore}%)</li>`); 
+        allSkillsWithNames.sort((a,b) => a.avgScore - b.avgScore);  
+        allSkillsWithNames.slice(0,3).forEach(s => skillWeaknessesUl.innerHTML += `<li>${s.name} (${s.avgScore}%)</li>`);
     } else { console.error("Skill strengths/weaknesses ULs not found"); }
+    console.log("Class Overview Data loaded.");
 }
 
 function loadStudentPerformanceTiers() { 
-    console.log("Loading Student Performance Tiers");
-    const sprintersContainer = document.getElementById('sprintersList'); const strugglersContainer = document.getElementById('strugglersList'); 
+    console.log("Loading Student Performance Tiers...");
+    const sprintersContainer = document.getElementById('sprintersList'); 
+    const strugglersContainer = document.getElementById('strugglersList'); 
     if (!sprintersContainer || !strugglersContainer) { console.error("Sprinter/Struggler containers not found"); return;}
     sprintersContainer.innerHTML = ''; strugglersContainer.innerHTML = ''; 
     const sprinters = []; const strugglers = []; 
@@ -328,63 +331,91 @@ function loadStudentPerformanceTiers() {
     if(sprinters.length === 0) sprintersContainer.innerHTML = "<p class='text-gray-500 col-span-full text-center'>No students currently flagged as sprinters.</p>"; 
     strugglers.slice(0,6).forEach(s => { const worstSkill = Object.values(s.cbSkills).flat().sort((a,b)=>a.score-b.score)[0]; strugglersContainer.innerHTML += `<div class="themed-card struggler-card p-0"><div class="themed-card-title-strip" style="font-size:1rem; padding:0.5rem 1rem; background-color: #dc3545; color:white;">${s.name}</div><div class="themed-card-body text-xs"><p>Score: <span class="font-bold">${s.activityMetrics.latestTotalScore}</span> (Target: ${s.targetScore})</p><p>Activity: ${s.activityMetrics.activityScore}/100 ${s.activityMetrics.activityScore < 60 ? '<span class="text-red-500 font-bold">LOW!</span>':''}</p><p class="mt-1">Focus Area: <span class="font-medium">${worstSkill?worstSkill.name:'N/A'} (${worstSkill?worstSkill.score:'' }%)</span></p></div></div>`; }); 
     if(strugglers.length === 0) strugglersContainer.innerHTML = "<p class='text-gray-500 col-span-full text-center'>No students currently flagged as strugglers.</p>";
+    console.log("Student Performance Tiers loaded.");
 }
 
 function getPerformanceClassStudent(score) { if (score >= 85) return 'performance-good'; if (score >= 70) return 'performance-average'; return 'performance-poor'; }
 
 function loadStudentDashboard(studentId) { 
-    console.log("Loading dashboard for student:", studentId);
+    console.log("Loading dashboard for student ID:", studentId);
     const student = students.find(s => s.id === studentId); 
     if (!student) { console.error("Student not found:", studentId); return; }
-    selectedStudentNameHeader.textContent = `- ${student.name}`; 
-    replicatedStudentDashboardDiv.classList.remove('hidden'); 
-    studentSelectionPrompt.classList.add('hidden'); 
-    document.getElementById('comparativeStudentName').textContent = student.name; 
+    
+    if(selectedStudentNameHeader) selectedStudentNameHeader.textContent = `- ${student.name}`; 
+    if(replicatedStudentDashboardDiv) replicatedStudentDashboardDiv.classList.remove('hidden'); 
+    if(studentSelectionPrompt) studentSelectionPrompt.classList.add('hidden'); 
+    
+    const compNameEl = document.getElementById('comparativeStudentName');
+    if(compNameEl) compNameEl.textContent = student.name; 
+    
     initializeStudentOverviewCharts(student); 
     
     const comparisonContainer = document.getElementById('studentComparisonWidgets'); 
-    comparisonContainer.innerHTML = `
-        <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Total Score</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.latestTotalScore} <span class="text-sm ${student.activityMetrics.latestTotalScore > classAverages.totalScaledScore ? 'text-good':'text-poor'}">${student.activityMetrics.latestTotalScore > classAverages.totalScaledScore ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.totalScaledScore)}</p></div></div> 
-        <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Avg Time/Module</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.avgTimePerModuleCB} min <span class="text-sm ${student.activityMetrics.avgTimePerModuleCB < classAverages.avgTimePerModuleCB ? 'text-good':'text-poor'}">${student.activityMetrics.avgTimePerModuleCB < classAverages.avgTimePerModuleCB ? '↓':'↑'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.avgTimePerModuleCB)} min</p></div></div> 
-        <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">EOC Quiz Attempts</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.eocAttempts} <span class="text-sm ${student.activityMetrics.eocAttempts > classAverages.eocAttempts ? 'text-good':'text-poor'}">${student.activityMetrics.eocAttempts > classAverages.eocAttempts ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.eocAttempts)}</p></div></div> 
-        <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Khan Academy Activities</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.khanActivitiesCompleted} <span class="text-sm ${student.activityMetrics.khanActivitiesCompleted > classAverages.khanActivitiesCompleted ? 'text-good':'text-poor'}">${student.activityMetrics.khanActivitiesCompleted > classAverages.khanActivitiesCompleted ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.khanActivitiesCompleted)}</p></div></div>`; 
+    if(comparisonContainer) {
+        comparisonContainer.innerHTML = `
+            <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Total Score</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.latestTotalScore} <span class="text-sm ${student.activityMetrics.latestTotalScore > classAverages.totalScaledScore ? 'text-good':'text-poor'}">${student.activityMetrics.latestTotalScore > classAverages.totalScaledScore ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.totalScaledScore)}</p></div></div> 
+            <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Avg Time/Module</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.avgTimePerModuleCB} min <span class="text-sm ${student.activityMetrics.avgTimePerModuleCB < classAverages.avgTimePerModuleCB ? 'text-good':'text-poor'}">${student.activityMetrics.avgTimePerModuleCB < classAverages.avgTimePerModuleCB ? '↓':'↑'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.avgTimePerModuleCB)} min</p></div></div> 
+            <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">EOC Quiz Attempts</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.eocAttempts} <span class="text-sm ${student.activityMetrics.eocAttempts > classAverages.eocAttempts ? 'text-good':'text-poor'}">${student.activityMetrics.eocAttempts > classAverages.eocAttempts ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.eocAttempts)}</p></div></div> 
+            <div class="themed-card kpi-widget p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Khan Academy Activities</div><div class="themed-card-body text-center py-2"><span class="value">${student.activityMetrics.khanActivitiesCompleted} <span class="text-sm ${student.activityMetrics.khanActivitiesCompleted > classAverages.khanActivitiesCompleted ? 'text-good':'text-poor'}">${student.activityMetrics.khanActivitiesCompleted > classAverages.khanActivitiesCompleted ? '↑':'↓'}</span></span><p class="comparison text-xs">Class Avg: ${Math.round(classAverages.khanActivitiesCompleted)}</p></div></div>`; 
+    } else { console.error("studentComparisonWidgets not found"); }
     
     const studentScoreCardContainer = document.getElementById('studentScoreCards'); 
-    const latestTest = student.cbPracticeTests.find(t => t.total === student.activityMetrics.latestTotalScore) || student.cbPracticeTests[0]; 
-    studentScoreCardContainer.innerHTML = `
-        <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB Total</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.total} <span class="text-lg text-gray-500">/1600</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.totalScaledScore)}</p></div></div> 
-        <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB R&W</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.rw} <span class="text-lg text-gray-500">/800</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.rwScore)}</p></div></div> 
-        <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB Math</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.math} <span class="text-lg text-gray-500">/800</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.mathScore)}</p></div></div> 
-        <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Avg EOC Quiz %</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${Math.round(Object.values(student.eocScores).flat().reduce((s,e)=>s+parseInt(e.latestScore),0) / (Object.values(student.eocScores).flat().length || 1) )}%</p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.eocOverallPercentage)}%</p></div></div> 
-        <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Target Score</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold text-purple-600">${student.targetScore}</p><p class="text-sm text-gray-500 mt-1">Goal: ${student.targetScore - latestTest.total > 0 ? '+':''}${student.targetScore - latestTest.total} pts</p></div></div>`; 
+    if(studentScoreCardContainer) {
+        const latestTest = student.cbPracticeTests.find(t => t.total === student.activityMetrics.latestTotalScore) || student.cbPracticeTests[0]; 
+        studentScoreCardContainer.innerHTML = `
+            <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB Total</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.total} <span class="text-lg text-gray-500">/1600</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.totalScaledScore)}</p></div></div> 
+            <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB R&W</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.rw} <span class="text-lg text-gray-500">/800</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.rwScore)}</p></div></div> 
+            <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Latest CB Math</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${latestTest.math} <span class="text-lg text-gray-500">/800</span></p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.mathScore)}</p></div></div> 
+            <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Avg EOC Quiz %</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold" style="color:#2a5266;">${Math.round(Object.values(student.eocScores).flat().reduce((s,e)=>s+parseInt(e.latestScore),0) / (Object.values(student.eocScores).flat().length || 1) )}%</p><p class="text-sm text-gray-500 mt-1">Class Avg: ${Math.round(classAverages.eocOverallPercentage)}%</p></div></div> 
+            <div class="themed-card p-0"><div class="themed-card-title-strip" style="padding:0.4rem 0.8rem; font-size:0.8rem;">Target Score</div><div class="themed-card-body text-center py-2"><p class="text-3xl font-bold text-purple-600">${student.targetScore}</p><p class="text-sm text-gray-500 mt-1">Goal: ${student.targetScore - latestTest.total > 0 ? '+':''}${student.targetScore - latestTest.total} pts</p></div></div>`; 
+    } else { console.error("studentScoreCards not found");}
     
-    const studentCbTbody = document.getElementById('student-cb-tests-tbody'); studentCbTbody.innerHTML = ''; 
-    student.cbPracticeTests.forEach(test => { const classAvgForTestRW = Math.round(classAverages.rwScore); const classAvgForTestMath = Math.round(classAverages.mathScore); const classAvgForTestTotal = classAvgForTestRW + classAvgForTestMath; const row = studentCbTbody.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${test.name}</td><td>${test.date}</td><td>${test.rw}</td><td>${test.math}</td><td>${test.total}</td><td>${test.rw !== '-' ? classAvgForTestRW : '(N/A)'}</td><td>${test.math !== '-' ? classAvgForTestMath : '(N/A)'}</td><td>${test.total !== '-' ? classAvgForTestTotal : '(N/A)'}</td>`; row.onclick = () => openModal(`Student: ${student.name} - CB Test: ${test.name}`, { type: 'cb_test', data: test, studentName: student.name }); }); 
-    
+    const studentCbTbody = document.getElementById('student-cb-tests-tbody'); 
+    if(studentCbTbody) {
+        studentCbTbody.innerHTML = ''; 
+        student.cbPracticeTests.forEach(test => { const classAvgForTestRW = Math.round(classAverages.rwScore); const classAvgForTestMath = Math.round(classAverages.mathScore); const classAvgForTestTotal = classAvgForTestRW + classAvgForTestMath; const row = studentCbTbody.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${test.name}</td><td>${test.date}</td><td>${test.rw}</td><td>${test.math}</td><td>${test.total}</td><td>${test.rw !== '-' ? classAvgForTestRW : '(N/A)'}</td><td>${test.math !== '-' ? classAvgForTestMath : '(N/A)'}</td><td>${test.total !== '-' ? classAvgForTestTotal : '(N/A)'}</td>`; row.onclick = () => openModal(`Student: ${student.name} - CB Test: ${test.name}`, { type: 'cb_test', data: test, studentName: student.name }); }); 
+    } else { console.error("student-cb-tests-tbody not found"); }
+
     ['reading', 'writing', 'math'].forEach(subject => { 
-        const eocTbodyContainer = document.getElementById(`student-${subject}-eoc-tbody`); eocTbodyContainer.innerHTML = ''; 
-        if (!student.eocScores[subject] || student.eocScores[subject].length === 0) { eocTbodyContainer.innerHTML = `<div class="p-3 text-gray-500">No EOC Quiz data for ${subject}.</div>`; } 
-        else { const table = document.createElement('table'); table.className = 'min-w-full table'; table.innerHTML = `<thead><tr><th>Chapter</th><th>Latest Score</th><th>Date</th><th>Class Avg</th></tr></thead><tbody></tbody>`; const body = table.querySelector('tbody'); student.eocScores[subject].forEach(eoc => { const row = body.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${eoc.name}</td><td>${eoc.latestScore}</td><td>${eoc.date}</td><td>${classAverages.eocChapters[eoc.name] || eoc.classAvg}%</td>`; row.onclick = () => openModal(`Student: ${student.name} - EOC Quiz: ${eoc.name}`, { type: 'eoc_quiz', data: eoc, studentName: student.name }); }); eocTbodyContainer.appendChild(table); } 
+        const eocTbodyContainer = document.getElementById(`student-${subject}-eoc-tbody`); 
+        if(eocTbodyContainer) {
+            eocTbodyContainer.innerHTML = ''; 
+            if (!student.eocScores[subject] || student.eocScores[subject].length === 0) { eocTbodyContainer.innerHTML = `<div class="p-3 text-gray-500">No EOC Quiz data for ${subject}.</div>`; } 
+            else { const table = document.createElement('table'); table.className = 'min-w-full table'; table.innerHTML = `<thead><tr><th>Chapter</th><th>Latest Score</th><th>Date</th><th>Class Avg</th></tr></thead><tbody></tbody>`; const body = table.querySelector('tbody'); student.eocScores[subject].forEach(eoc => { const row = body.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${eoc.name}</td><td>${eoc.latestScore}</td><td>${eoc.date}</td><td>${classAverages.eocChapters[eoc.name] || eoc.classAvg}%</td>`; row.onclick = () => openModal(`Student: ${student.name} - EOC Quiz: ${eoc.name}`, { type: 'eoc_quiz', data: eoc, studentName: student.name }); }); eocTbodyContainer.appendChild(table); } 
+        } else { console.error(`student-${subject}-eoc-tbody not found`); }
+
+        const khanContainer = document.getElementById(`student-${subject}-khan-data`); 
+        if(khanContainer) {
+            khanContainer.innerHTML = ''; 
+            if (!student.khanData[subject] || student.khanData[subject].length === 0) { khanContainer.innerHTML = `<p class="text-gray-500 p-3">No Khan Academy ${subject} data.</p>`; } 
+            else { const table = document.createElement('table'); table.className = 'min-w-full table'; table.innerHTML = `<thead><tr><th>Assignment</th><th>Score</th><th>Date</th><th>Class Avg</th></tr></thead><tbody></tbody>`; const body = table.querySelector('tbody'); student.khanData[subject].forEach(khan => { const row = body.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${khan.name}</td><td>${khan.score}</td><td>${khan.date}</td><td>${khan.classAvg}</td>`; row.onclick = () => openModal(`Student: ${student.name} - Khan Academy: ${khan.name}`, { type: 'khan', data: khan, studentName: student.name }); }); khanContainer.appendChild(table); } 
+        } else { console.error(`student-${subject}-khan-data not found`); }
         
-        const khanContainer = document.getElementById(`student-${subject}-khan-data`); khanContainer.innerHTML = ''; 
-        if (!student.khanData[subject] || student.khanData[subject].length === 0) { khanContainer.innerHTML = `<p class="text-gray-500 p-3">No Khan Academy ${subject} data.</p>`; } 
-        else { const table = document.createElement('table'); table.className = 'min-w-full table'; table.innerHTML = `<thead><tr><th>Assignment</th><th>Score</th><th>Date</th><th>Class Avg</th></tr></thead><tbody></tbody>`; const body = table.querySelector('tbody'); student.khanData[subject].forEach(khan => { const row = body.insertRow(); row.className = 'clickable-row'; row.innerHTML = `<td>${khan.name}</td><td>${khan.score}</td><td>${khan.date}</td><td>${khan.classAvg}</td>`; row.onclick = () => openModal(`Student: ${student.name} - Khan Academy: ${khan.name}`, { type: 'khan', data: khan, studentName: student.name }); }); khanContainer.appendChild(table); } 
-        
-        const skillsContainer = document.getElementById(`student-${subject}-cb-skills-data`); skillsContainer.innerHTML = ''; 
-         if (!student.cbSkills[subject] || student.cbSkills[subject].length === 0) { skillsContainer.innerHTML = `<p class="text-gray-500 p-3">No CB Skill data for ${subject}.</p>`; } 
-         else { student.cbSkills[subject].forEach(skill => { const skillDiv = document.createElement('div'); skillDiv.className = 'p-3 bg-gray-50 rounded-md border'; const perfClass = getPerformanceClassStudent(skill.score); skillDiv.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-sm font-medium">${skill.name}</span><span class="text-xs ${perfClass.replace('performance-','text-')} font-semibold">${skill.score}%</span></div><div class="progress-bar-container"><div class="progress-bar ${perfClass}" style="width: ${skill.score}%"></div></div><p class="text-xs text-gray-500 mt-1">Class Avg: ${classAverages.cbSkills[skill.key] || skill.classAvg}%</p>`; skillsContainer.appendChild(skillDiv); }); } 
+        const skillsContainer = document.getElementById(`student-${subject}-cb-skills-data`); 
+        if(skillsContainer) {
+            skillsContainer.innerHTML = ''; 
+             if (!student.cbSkills[subject] || student.cbSkills[subject].length === 0) { skillsContainer.innerHTML = `<p class="text-gray-500 p-3">No CB Skill data for ${subject}.</p>`; } 
+             else { student.cbSkills[subject].forEach(skill => { const skillDiv = document.createElement('div'); skillDiv.className = 'p-3 bg-gray-50 rounded-md border'; const perfClass = getPerformanceClassStudent(skill.score); skillDiv.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-sm font-medium">${skill.name}</span><span class="text-xs ${perfClass.replace('performance-','text-')} font-semibold">${skill.score}%</span></div><div class="progress-bar-container"><div class="progress-bar ${perfClass}" style="width: ${skill.score}%"></div></div><p class="text-xs text-gray-500 mt-1">Class Avg: ${classAverages.cbSkills[skill.key] || skill.classAvg}%</p>`; skillsContainer.appendChild(skillDiv); }); } 
+        } else { console.error(`student-${subject}-cb-skills-data not found`); }
     }); 
     const firstStudentTab = document.querySelector('#replicatedStudentDashboard .student-main-tab-button'); if(firstStudentTab) firstStudentTab.click(); 
+    console.log("Student dashboard loaded for:", student.name);
 }
         
 function openModal(title, contentDetails) { 
     const modalHeaderH2 = modal.querySelector('.modal-header h2'); 
     if(modalHeaderH2) modalHeaderH2.textContent = title;
+    else { document.getElementById('modalTitle').textContent = title; } // Fallback for older modal structure
+
     modalQuestionDetailsContainer.innerHTML = ''; 
     const dQ=Array.from({length:5+Math.floor(Math.random()*5)},(_,i)=>{const cor=Math.random()>0.3;const stat=Math.random()>0.1?'answered':'unanswered';return{text:`Sample Question ${i+1} from ${contentDetails.type||'test'}...`,yourAnswer:stat==='unanswered'?"N/A":(cor?`Opt A`:`Opt B`),correct:stat==='unanswered'?false:cor,classCorrectPercent:60+Math.floor(Math.random()*35),status:stat};}); 
     dQ.forEach((q,index)=>{const qD=document.createElement('div');let sTxt='',sCls='';if(q.status==='unanswered'){sTxt='Unanswered';sCls='bg-yellow-50 border-yellow-200 text-yellow-600';}else if(q.correct){sTxt='Correct';sCls='bg-green-50 border-green-200';}else{sTxt='Incorrect';sCls='bg-red-50 border-red-200';} qD.className=`p-2 border rounded-md ${sCls}`; qD.innerHTML=`<p class="font-medium text-gray-700">Q${index+1}: ${q.text}</p><p>Your Answer: <span class="font-semibold">${q.yourAnswer}</span> (${sTxt})</p><p class="text-xs">Class Avg: ${q.classCorrectPercent}%</p>`; modalQuestionDetailsContainer.appendChild(qD);}); 
-    if(modalDonutChartInstance)modalDonutChartInstance.destroy();if(modalLineChartInstance)modalLineChartInstance.destroy(); 
+    
+    if(modalDonutChartInstance)modalDonutChartInstance.destroy();
+    if(modalLineChartInstance)modalLineChartInstance.destroy(); 
+    
     const cor=dQ.filter(q=>q.status==='answered'&&q.correct).length;const inc=dQ.filter(q=>q.status==='answered'&&!q.correct).length;const un=dQ.filter(q=>q.status==='unanswered').length; 
+    
     const donutCtx = document.getElementById('modalDonutChart')?.getContext('2d');
     if(donutCtx) {
       modalDonutChartInstance=new Chart(donutCtx,{type:'doughnut',data:{labels:['Correct','Incorrect','Unanswered'],datasets:[{data:[cor,inc,un],backgroundColor:['#28a745','#dc3545','#6c757d'],hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom'}},cutout:'50%'}}); 
@@ -397,6 +428,3 @@ function openModal(title, contentDetails) {
 }
 function closeModal() { if(modal) modal.style.display = "none"; if (modalDonutChartInstance) modalDonutChartInstance.destroy(); if (modalLineChartInstance) modalLineChartInstance.destroy(); }
 window.onclick = function(event) { if (event.target == modal) closeModal(); }
-    </script>
-</body>
-</html>
